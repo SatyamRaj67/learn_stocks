@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { cookies } from "next/headers";
+import { Toaster } from "sonner";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,12 +55,14 @@ export default async function RootLayout({
         >
           <SidebarProvider defaultOpen={defaultOpen}>
             <AppSidebar />
-            <main>
+            <main className="flex flex-col w-full min-h-screen bg-background">
               <nav>
                 <SidebarTrigger />
               </nav>
               {children}
+              <Footer />
             </main>
+            <Toaster />
           </SidebarProvider>
         </ThemeProvider>
       </body>
