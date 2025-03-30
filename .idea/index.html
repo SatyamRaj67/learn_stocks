@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>StockTrader Pro</title>
+    <link
+      rel="stylesheet"
+      href="styles.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Sidebar Navigation -->
+      <nav class="sidebar">
+        <div class="logo">
+          <h1>StockTrader Pro</h1>
+        </div>
+        <ul class="nav-links">
+          <li
+            class="nav-item active"
+            data-page="dashboard"
+          >
+            <span class="icon">📊</span> Dashboard
+          </li>
+          <li
+            class="nav-item"
+            data-page="market"
+          >
+            <span class="icon">📈</span> Market
+          </li>
+          <li
+            class="nav-item"
+            data-page="portfolio"
+          >
+            <span class="icon">💼</span> Portfolio
+          </li>
+          <li
+            class="nav-item"
+            data-page="watchlist"
+          >
+            <span class="icon">👁️</span> Watchlist
+          </li>
+          <li
+            class="nav-item"
+            data-page="transactions"
+          >
+            <span class="icon">📝</span> Transactions
+          </li>
+          <li
+            class="nav-item admin-only"
+            data-page="admin"
+          >
+            <span class="icon">⚙️</span> Admin Panel
+          </li>
+        </ul>
+        <div class="user-info">
+          <span class="avatar">👤</span>
+          <span class="username">John Doe</span>
+          <span class="role">(Admin)</span>
+        </div>
+      </nav>
+
+      <!-- Main Content Area -->
+      <main class="main-content">
+        <!-- Dashboard Page -->
+        <section
+          id="dashboard"
+          class="page active"
+        >
+          <h2>Dashboard</h2>
+          <div class="dashboard-summary">
+            <div class="summary-card">
+              <h3>Portfolio Value</h3>
+              <p class="value">$24,856.32</p>
+              <p class="change positive">+2.3% today</p>
+            </div>
+            <div class="summary-card">
+              <h3>Available Cash</h3>
+              <p class="value">$5,243.87</p>
+            </div>
+            <div class="summary-card">
+              <h3>Total Gain/Loss</h3>
+              <p class="value">+$1,856.44</p>
+              <p class="change positive">+8.1% all time</p>
+            </div>
+          </div>
+
+          <div class="portfolio-performance">
+            <h3>Portfolio Performance</h3>
+            <div class="chart-container">
+              <canvas id="performanceChart"></canvas>
+            </div>
+          </div>
+
+          <div class="quick-actions">
+            <h3>Quick Actions</h3>
+            <div class="action-buttons">
+              <button class="btn primary">Buy Stocks</button>
+              <button class="btn secondary">Sell Stocks</button>
+              <button class="btn tertiary">Add to Watchlist</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Market Page -->
+        <section
+          id="market"
+          class="page"
+        >
+          <h2>Market Overview</h2>
+          <div class="search-container">
+            <input
+              type="text"
+              placeholder="Search for stocks..."
+              class="search-input"
+            />
+            <button class="btn search">Search</button>
+          </div>
+
+          <div class="market-filters">
+            <select class="filter-select">
+              <option>All Sectors</option>
+              <option>Technology</option>
+              <option>Finance</option>
+              <option>Healthcare</option>
+              <option>Energy</option>
+            </select>
+            <select class="filter-select">
+              <option>Sort by: Name</option>
+              <option>Sort by: Price (High to Low)</option>
+              <option>Sort by: Price (Low to High)</option>
+              <option>Sort by: % Change</option>
+            </select>
+          </div>
+
+          <div class="stocks-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Name</th>
+                  <th>Price</th>
+                  <th>Change</th>
+                  <th>% Change</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="stocksList">
+                <!-- Stock rows will be populated from data.json -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Portfolio Page -->
+        <section
+          id="portfolio"
+          class="page"
+        >
+          <h2>Your Portfolio</h2>
+          <div class="portfolio-summary">
+            <div class="chart-container half-width">
+              <h3>Portfolio Allocation</h3>
+              <canvas id="allocationChart"></canvas>
+            </div>
+            <div class="portfolio-stats half-width">
+              <h3>Portfolio Statistics</h3>
+              <div class="stat-item">
+                <span class="stat-label">Total Value:</span>
+                <span class="stat-value">$24,856.32</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Day's Gain/Loss:</span>
+                <span class="stat-value positive">+$521.44 (+2.3%)</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Total Gain/Loss:</span>
+                <span class="stat-value positive">+$1,856.44 (+8.1%)</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Total Holdings:</span>
+                <span class="stat-value">12 stocks</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="holdings-table">
+            <h3>Your Holdings</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Name</th>
+                  <th>Shares</th>
+                  <th>Avg. Cost</th>
+                  <th>Current Price</th>
+                  <th>Current Value</th>
+                  <th>Gain/Loss</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="holdingsList">
+                <!-- Holdings rows will be populated from data.json -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Watchlist Page -->
+        <section
+          id="watchlist"
+          class="page"
+        >
+          <h2>Your Watchlist</h2>
+          <div class="watchlist-actions">
+            <button class="btn primary">Add Stock to Watchlist</button>
+            <button class="btn secondary">Create New Watchlist</button>
+          </div>
+
+          <div class="watchlist-tabs">
+            <div class="tab active">Default Watchlist</div>
+            <div class="tab">Tech Stocks</div>
+            <div class="tab">Dividend Payers</div>
+            <div class="tab">+</div>
+          </div>
+
+          <div class="watchlist-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Name</th>
+                  <th>Price</th>
+                  <th>Change</th>
+                  <th>% Change</th>
+                  <th>52 Week Range</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="watchlistStocks">
+                <!-- Watchlist rows will be populated from data.json -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Transactions Page -->
+        <section
+          id="transactions"
+          class="page"
+        >
+          <h2>Transaction History</h2>
+          <div class="transaction-filters">
+            <div class="filter-group">
+              <label>Date Range:</label>
+              <select class="filter-select">
+                <option>All Time</option>
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+                <option>Last 90 Days</option>
+                <option>This Year</option>
+                <option>Custom...</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Transaction Type:</label>
+              <select class="filter-select">
+                <option>All Transactions</option>
+                <option>Buy</option>
+                <option>Sell</option>
+                <option>Deposit</option>
+                <option>Withdrawal</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="transactions-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Symbol</th>
+                  <th>Name</th>
+                  <th>Shares</th>
+                  <th>Price</th>
+                  <th>Total Value</th>
+                </tr>
+              </thead>
+              <tbody id="transactionList">
+                <!-- Transaction rows will be populated from data.json -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Admin Panel Page -->
+        <section
+          id="admin"
+          class="page admin-only"
+        >
+          <h2>Admin Panel</h2>
+          <div class="admin-tabs">
+            <div class="tab active">Stock Management</div>
+            <div class="tab">User Management</div>
+            <div class="tab">System Settings</div>
+          </div>
+
+          <div class="admin-content">
+            <div class="stock-management">
+              <h3>Stock Management</h3>
+              <div class="admin-actions">
+                <button class="btn primary">Add New Stock</button>
+                <button class="btn secondary">Bulk Update Prices</button>
+              </div>
+
+              <div class="stocks-table admin-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Symbol</th>
+                      <th>Name</th>
+                      <th>Current Price</th>
+                      <th>Edit Price</th>
+                      <th>Sector</th>
+                      <th>Listed Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminStocksList">
+                    <!-- Admin stock rows will be populated from data.json -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Stock Detail Modal -->
+        <div
+          class="modal"
+          id="stockModal"
+        >
+          <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="stock-detail">
+              <div class="stock-header">
+                <h2 id="modalStockName">Apple Inc. (AAPL)</h2>
+                <div class="stock-price">
+                  <span id="modalStockPrice">$178.92</span>
+                  <span
+                    id="modalStockChange"
+                    class="positive"
+                    >+2.34 (+1.32%)</span
+                  >
+                </div>
+              </div>
+
+              <div class="stock-charts">
+                <div class="chart-container">
+                  <h3>Price History</h3>
+                  <div class="chart-timeframes">
+                    <span class="timeframe active">1D</span>
+                    <span class="timeframe">1W</span>
+                    <span class="timeframe">1M</span>
+                    <span class="timeframe">3M</span>
+                    <span class="timeframe">1Y</span>
+                    <span class="timeframe">All</span>
+                  </div>
+                  <canvas id="stockPriceChart"></canvas>
+                </div>
+              </div>
+
+              <div class="stock-info">
+                <div class="info-column">
+                  <div class="info-item">
+                    <span class="info-label">Market Cap:</span>
+                    <span class="info-value">$2.82T</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">P/E Ratio:</span>
+                    <span class="info-value">29.45</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">52-Week High:</span>
+                    <span class="info-value">$196.38</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">52-Week Low:</span>
+                    <span class="info-value">$142.19</span>
+                  </div>
+                </div>
+                <div class="info-column">
+                  <div class="info-item">
+                    <span class="info-label">Dividend Yield:</span>
+                    <span class="info-value">0.53%</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Volume:</span>
+                    <span class="info-value">58.23M</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Avg. Volume:</span>
+                    <span class="info-value">65.12M</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Sector:</span>
+                    <span class="info-value">Technology</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="trading-actions">
+                <div class="quantity-selector">
+                  <label for="quantity">Quantity:</label>
+                  <input
+                    type="number"
+                    id="quantity"
+                    min="1"
+                    value="1"
+                  />
+                </div>
+                <div class="estimated-cost">
+                  <span>Estimated Cost:</span>
+                  <span id="estimatedCost">$178.92</span>
+                </div>
+                <div class="action-buttons">
+                  <button class="btn primary">Buy</button>
+                  <button class="btn secondary">Sell</button>
+                  <button class="btn tertiary">Add to Watchlist</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Stock Edit Modal -->
+        <div
+          class="modal"
+          id="adminStockModal"
+        >
+          <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="admin-stock-edit">
+              <h2>
+                Edit Stock:
+                <span id="adminEditStockName">Apple Inc. (AAPL)</span>
+              </h2>
+              <form id="stockEditForm">
+                <div class="form-group">
+                  <label for="stockSymbol">Symbol:</label>
+                  <input
+                    type="text"
+                    id="stockSymbol"
+                    value="AAPL"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="stockName">Company Name:</label>
+                  <input
+                    type="text"
+                    id="stockName"
+                    value="Apple Inc."
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="stockPrice">Current Price ($):</label>
+                  <input
+                    type="number"
+                    id="stockPrice"
+                    value="178.92"
+                    step="0.01"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="stockSector">Sector:</label>
+                  <select id="stockSector">
+                    <option>Technology</option>
+                    <option>Finance</option>
+                    <option>Healthcare</option>
+                    <option>Energy</option>
+                    <option>Consumer</option>
+                    <option>Industrials</option>
+                    <option>Materials</option>
+                    <option>Utilities</option>
+                    <option>Real Estate</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="stockDescription">Description:</label>
+                  <textarea
+                    id="stockDescription"
+                    rows="4"
+                  >
+Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide. The company offers iPhone, iPad, Mac, Apple Watch, and various accessories.</textarea
+                  >
+                </div>
+                <div class="form-actions">
+                  <button
+                    type="submit"
+                    class="btn primary"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    class="btn danger"
+                  >
+                    Delete Stock
+                  </button>
+                  <button
+                    type="button"
+                    class="btn secondary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
