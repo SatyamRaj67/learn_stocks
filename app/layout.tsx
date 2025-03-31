@@ -4,12 +4,12 @@ import "./globals.css";
 import Script from "next/script";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
 import { cookies } from "next/headers";
 import { Toaster } from "sonner";
-import { SiteHeader } from "@/components/site-header";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
+import { SiteHeader } from "@/components/layout/site-header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

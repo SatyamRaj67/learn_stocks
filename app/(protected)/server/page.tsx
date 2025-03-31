@@ -1,4 +1,4 @@
-import { UserInfo } from "@/components/user-info";
+import { UserInfo } from "@/components/auth/user-info";
 import { currentUser } from "@/lib/auth";
 import React from "react";
 

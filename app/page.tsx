@@ -7,7 +7,7 @@ import FeaturesSection from "@/components/home/FeaturesSection";
 import MarketSection from "@/components/home/MarketSection";
 import ImportanceSection from "@/components/home/ImportanceSection";
 import ContactSection from "@/components/home/ContactSection";
-import Footer from "@/components/Footer";
+import Footer from "@/components/layout/Footer";
 
 const HomePage = () => {
   return (

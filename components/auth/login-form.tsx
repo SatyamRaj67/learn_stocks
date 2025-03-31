@@ -19,8 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 import { CardWrapper } from "@/components/auth/card-wrapper";
-import { FormError } from "@/components/form-error";
-import { FormSuccess } from "@/components/form-success";
+import { FormError } from "@/components/layout/form-error";
+import { FormSuccess } from "@/components/layout/form-success";
 import { login } from "@/actions/login";
 
 import { useState, useTransition } from "react";

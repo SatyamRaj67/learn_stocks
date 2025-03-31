@@ -1,7 +1,7 @@
 import React from "react";
 import { DataTable } from "@/components/data-table";
-import { SectionCards } from "@/components/section-cards";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { SectionCards } from "@/components/home/section-cards";
+import { ChartAreaInteractive } from "@/components/layout/chart-area-interactive";
 
 import data from "./data.json";
 
