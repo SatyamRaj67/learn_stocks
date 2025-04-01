@@ -60,7 +60,7 @@ const HeroSection = () => {
         </div>
         <div className="flex-1 hidden md:block">
           <div className="relative h-96 w-full bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 rounded-lg p-1">
-            <div className="absolute inset-0 bg-[url('/stock-chart-pattern.svg')] bg-no-repeat bg-cover opacity-30"></div>
+            <div className="absolute inset-0 bg-no-repeat bg-cover opacity-30"></div>
             <div className="relative h-full rounded-md bg-slate-800/70 backdrop-blur p-6 border border-slate-700">
               <div className="flex justify-between items-center mb-6">
                 <div>
