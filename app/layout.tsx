@@ -10,6 +10,7 @@ import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { SiteHeader } from "@/components/layout/site-header";
+import { QueryClientProvider } from "@/providers/queryClient-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,14 +57,16 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <SidebarProvider defaultOpen={defaultOpen}>
-              <AppSidebar variant="inset" />
-              <SidebarInset>
-                <SiteHeader />
-                {children}
-                <Toaster />
-              </SidebarInset>
-            </SidebarProvider>
+            <QueryClientProvider>
+              <SidebarProvider defaultOpen={defaultOpen}>
+                <AppSidebar variant="inset" />
+                <SidebarInset>
+                  <SiteHeader />
+                  {children}
+                  <Toaster />
+                </SidebarInset>
+              </SidebarProvider>
+            </QueryClientProvider>
           </ThemeProvider>
         </SessionProvider>
       </body>

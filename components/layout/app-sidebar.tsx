@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import {
+  IconCashRegister,
   IconChartBar,
   IconDashboard,
   IconDatabase,
   IconFileDescription,
-  IconFolder,
   IconHelp,
   IconInnerShadowTop,
   IconReport,
@@ -51,9 +51,9 @@ const data = {
       icon: IconReportAnalytics,
     },
     {
-      title: "Projects",
-      href: "#",
-      icon: IconFolder,
+      title: "Transactions",
+      href: "/transactions",
+      icon: IconCashRegister,
     },
     {
       title: "Team",

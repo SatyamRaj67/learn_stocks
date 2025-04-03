@@ -19,6 +19,11 @@ Routes that start with this prefix are used for API authentication purposes
 @type {string[]} */
 export const apiAuthPrefix = "/api/auth";
 
+/** Prefix for API Auth routes
+Routes that start with this prefix are used for API authentication purposes
+@type {string[]} */
+export const apiRoutesPrefix = "/api";
+
 /** The default redirect path after a user logs in
  * @type {string[]} */
 export const DEFAULT_LOGIN_REDIRECT = "/settings";
