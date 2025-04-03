@@ -1,21 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  IconCashRegister,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileDescription,
-  IconHelp,
-  IconInnerShadowTop,
-  IconReport,
-  IconReportAnalytics,
-  IconSearch,
-  IconSettings,
-  IconTerminal,
-  IconUsers,
-} from "@tabler/icons-react";
+import { IconInnerShadowTop } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/layout/nav-main";
 import { NavSecondary } from "@/components/layout/nav-secondary";
@@ -32,82 +18,7 @@ import {
 import Link from "next/link";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { NavAdmin } from "./nav-admin";
-
-const data = {
-  navMain: [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Market",
-      href: "/market",
-      icon: IconChartBar,
-    },
-    {
-      title: "Analytics",
-      href: "#",
-      icon: IconReportAnalytics,
-    },
-    {
-      title: "Transactions",
-      href: "/transactions",
-      icon: IconCashRegister,
-    },
-    {
-      title: "Team",
-      href: "#",
-      icon: IconUsers,
-    },
-  ],
-  navAdmin: [
-    {
-      title: "Dashboard",
-      href: "/admin/dashboard",
-      icon: IconTerminal,
-    },
-    {
-      title: "Watchlist",
-      href: "/admin/watchlist",
-      icon: IconFileDescription,
-    },
-    {
-      title: "Reports",
-      href: "/admin/reports",
-      icon: IconReport,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-  ],
-};
+import { navData } from "@/data/nav-data";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useCurrentUser();
@@ -132,11 +43,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {user?.role === "ADMIN" && <NavAdmin items={data.navAdmin} />}
+        <NavMain items={navData.navMain} />
+        {user?.role === "ADMIN" && <NavAdmin items={navData.navAdmin} />}
 
         <NavSecondary
-          items={data.navSecondary}
+          items={navData.navSecondary}
           className="mt-auto"
         />
       </SidebarContent>
