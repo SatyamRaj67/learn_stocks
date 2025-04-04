@@ -2,18 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-
-// Validation schema
-const stockUpdateSchema = z.object({
-  name: z.string().min(1).max(100),
-  sector: z.string().optional().nullable(),
-  currentPrice: z.coerce.number().min(0),
-  previousClose: z.coerce.number().min(0).optional().nullable(),
-  volume: z.coerce.number().min(0),
-  marketCap: z.coerce.number().min(0).optional().nullable(),
-  isActive: z.boolean(),
-  isFrozen: z.boolean(),
-});
+import { stockUpdateSchema } from "@/schemas";
 
 // Helper to check if user is admin
 const isAdmin = async () => {

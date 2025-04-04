@@ -14,6 +14,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const portfolio = await prisma.portfolio.findUnique({
+      where: { userId: userId },
+    });
+
+    if (!portfolio) {
+      return NextResponse.json(
+        { error: "Wait for our Admins to approve" },
+        { status: 404 }
+      );
+    }
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     const stock = await prisma.stock.findUnique({ where: { id: stockId } });
 
@@ -37,17 +48,6 @@ export async function POST(req: NextRequest) {
       where: { id: userId },
       data: { balance: user.balance.toNumber() - totalCost },
     }); // Find the user's portfolio
-
-    const portfolio = await prisma.portfolio.findUnique({
-      where: { userId: userId },
-    });
-
-    if (!portfolio) {
-      return NextResponse.json(
-        { error: "Portfolio not found for this user" },
-        { status: 404 }
-      );
-    }
 
     const existingPosition = await prisma.position.findUnique({
       where: {

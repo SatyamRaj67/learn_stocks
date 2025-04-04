@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { ArrowRight } from "lucide-react";
@@ -12,21 +14,73 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Sample stock data
-const stockData = [
-  { date: "Mar 1", price: 182.5 },
-  { date: "Mar 5", price: 185.2 },
-  { date: "Mar 10", price: 181.8 },
-  { date: "Mar 15", price: 187.4 },
-  { date: "Mar 20", price: 190.1 },
-  { date: "Mar 25", price: 193.6 },
-  { date: "Mar 30", price: 196.2 },
-  { date: "Apr 5", price: 192.8 },
-  { date: "Apr 10", price: 195.7 },
-  { date: "Apr 15", price: 198.45 },
-];
+// Define types for our stock data
+type StockData = {
+  stock: {
+    id: string;
+    symbol: string;
+    name: string;
+    currentPrice: number;
+    sector?: string;
+  };
+  chartData: {
+    date: string;
+    price: number;
+  }[];
+  priceChange: number;
+  percentChange: number;
+};
 
 const HeroSection = () => {
+  const [stockData, setStockData] = useState<StockData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStockData = async () => {
+      try {
+        setIsLoading(true);
+        // Replace with the specific stock symbol you want, e.g., "AAPL"
+        const response = await fetch("/api/stocks/history?symbol=AAPL");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch stock data");
+        }
+
+        const data = await response.json();
+        setStockData(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching stock data:", err);
+        setError("Failed to load stock data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStockData();
+  }, []);
+
+  // Use default data if we couldn't fetch from the API
+  const displayData = stockData || {
+    stock: {
+      symbol: "AAPL",
+      name: "Apple Inc.",
+      currentPrice: 198.45,
+    },
+    chartData: Array(30)
+      .fill(0)
+      .map((_, i) => ({
+        date: `Day ${i + 1}`,
+        price: 180 + Math.random() * 30,
+      })),
+    priceChange: 2.34,
+    percentChange: 1.2,
+  };
+
+  const { stock, chartData, priceChange, percentChange } = displayData;
+  const isPriceUp = priceChange >= 0;
+
   return (
     <section className="w-full px-4 py-24 md:py-32 bg-gradient-to-br from-slate-950 to-slate-900 text-white">
       <div className="container mx-auto flex flex-col md:flex-row items-center gap-8">
@@ -62,79 +116,101 @@ const HeroSection = () => {
           <div className="relative h-96 w-full bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 rounded-lg p-1">
             <div className="absolute inset-0 bg-no-repeat bg-cover opacity-30"></div>
             <div className="relative h-full rounded-md bg-slate-800/70 backdrop-blur p-6 border border-slate-700">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h3 className="font-bold text-lg">AAPL</h3>
-                  <p className="text-sm text-slate-300">Apple Inc.</p>
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="animate-pulse text-slate-400">
+                    Loading stock data...
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-xl">$198.45</p>
-                  <p className="text-emerald-400 text-sm">+2.34 (1.2%)</p>
+              ) : error ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-red-400">{error}</div>
                 </div>
-              </div>
-              <div className="h-52 w-full bg-gradient-to-t from-emerald-500/10 to-transparent rounded relative">
-                {/* Recharts stock chart */}
-                <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                >
-                  <AreaChart
-                    data={stockData}
-                    margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="colorPrice"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
+              ) : (
+                <>
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 className="font-bold text-lg">{stock.symbol}</h3>
+                      <p className="text-sm text-slate-300">{stock.name}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-xl">${displayData.stock.currentPrice}</p>
+                      <p
+                        className={`${isPriceUp ? "text-emerald-400" : "text-red-400"} text-sm`}
                       >
-                        <stop
-                          offset="5%"
-                          stopColor="#10b981"
-                          stopOpacity={0.8}
+                        {isPriceUp ? "+" : ""}
+                        {priceChange.toFixed(2)} ({percentChange.toFixed(1)}%)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="h-52 w-full bg-gradient-to-t from-emerald-500/10 to-transparent rounded relative">
+                    {/* Recharts stock chart */}
+                    <ResponsiveContainer
+                      width="100%"
+                      height="100%"
+                    >
+                      <AreaChart
+                        data={chartData}
+                        margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                      >
+                        <defs>
+                          <linearGradient
+                            id="colorPrice"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor={isPriceUp ? "#10b981" : "#ef4444"}
+                              stopOpacity={0.8}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor={isPriceUp ? "#10b981" : "#ef4444"}
+                              stopOpacity={0.1}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 10, fill: "#94a3b8" }}
+                          axisLine={false}
+                          tickLine={false}
                         />
-                        <stop
-                          offset="95%"
-                          stopColor="#10b981"
-                          stopOpacity={0.1}
+                        <YAxis
+                          domain={["dataMin - 5", "dataMax + 5"]}
+                          hide={true}
                         />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 10, fill: "#94a3b8" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      domain={["dataMin - 5", "dataMax + 5"]}
-                      hide={true}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1e293b",
-                        borderColor: "#475569",
-                        borderRadius: "0.375rem",
-                      }}
-                      labelStyle={{ color: "#f8fafc" }}
-                      itemStyle={{ color: "#f8fafc" }}
-                      formatter={(value) => [`$${value}`, "Price"]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="price"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorPrice)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-emerald-500/20 to-transparent"></div>
-              </div>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1e293b",
+                            borderColor: "#475569",
+                            borderRadius: "0.375rem",
+                          }}
+                          labelStyle={{ color: "#f8fafc" }}
+                          itemStyle={{ color: "#f8fafc" }}
+                          formatter={(value) => [
+                            `$${typeof value === "number" ? value.toFixed(2) : value}`,
+                            "Price",
+                          ]}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="price"
+                          stroke={isPriceUp ? "#10b981" : "#ef4444"}
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorPrice)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-emerald-500/20 to-transparent"></div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

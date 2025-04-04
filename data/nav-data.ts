@@ -75,11 +75,6 @@ export const navData = {
         url: "#",
         icon: IconHelp,
       },
-      {
-        title: "Search",
-        url: "#",
-        icon: IconSearch,
-      },
     ],
     documents: [
       {
