@@ -1,11 +1,11 @@
 "use client";
 
 import * as z from "zod";
-import { useEffect, useState, useTransition } from "react";
 import { settings } from "@/actions/settings";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
+import { useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { SettingsSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,39 +22,26 @@ import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { FormError } from "@/components/layout/form-error";
 import { FormSuccess } from "@/components/layout/form-success";
-import {
-  Select,
-  SelectItem,
-  SelectTrigger,
-  SelectContent,
-  SelectValue,
-} from "@/components/ui/select";
-import { UserRole } from "@prisma/client";
 import { Switch } from "@/components/ui/switch";
-import { useUserSettings } from "@/hooks/useUserSettings";
-
-// Extended schema with our easter egg fields
-const ExtendedSettingsSchema = z.intersection(
-  SettingsSchema,
-  z.object({
-    referralCode: z.string().optional(),
-    balance: z.coerce.number().optional(),
-    totalProfit: z.coerce.number().optional(),
-  })
-);
-type ExtendedSettingsFormValues = z.infer<typeof ExtendedSettingsSchema>;
+import { toast } from "sonner";
+import { ReferralDialog } from "@/components/settings/referral-dialog";
+import { AdminDialog } from "@/components/settings/admin-dialog";
 
 const SettingsPage = () => {
   const user = useCurrentUser();
-  const { settings: userSettings, isLoading } = useUserSettings();
-  const [showAdminFeatures, setShowAdminFeatures] = useState(false);
+
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const { update } = useSession();
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<ExtendedSettingsFormValues>({
-    resolver: zodResolver(ExtendedSettingsSchema),
+  // Easter egg states
+  const clickCountRef = useRef(0);
+  const [referralDialogOpen, setReferralDialogOpen] = useState(false);
+  const [adminDialogOpen, setAdminDialogOpen] = useState(false);
+
+  const form = useForm<z.infer<typeof SettingsSchema>>({
+    resolver: zodResolver(SettingsSchema),
     defaultValues: {
       password: undefined,
       newPassword: undefined,
@@ -62,36 +49,27 @@ const SettingsPage = () => {
       email: user?.email || undefined,
       role: user?.role || undefined,
       isTwoFactorEnabled: user?.isTwoFactorEnabled || undefined,
-      referralCode: "",
-      balance: undefined,
-      totalProfit: undefined,
     },
   });
 
-  // Update form with API data when available
-  useEffect(() => {
-    if (userSettings) {
-      form.setValue("balance", parseFloat(userSettings.balance));
-      form.setValue("totalProfit", parseFloat(userSettings.totalProfit));
+  // Handle the settings title click for Easter egg
+  const handleTitleClick = () => {
+    clickCountRef.current += 1;
+    if (clickCountRef.current >= 5) {
+      // Show dialog after 5 clicks
+      setReferralDialogOpen(true);
+      clickCountRef.current = 0; // Reset counter
     }
-  }, [userSettings, form]);
+  };
 
-  // Check referral code against environment variable when it changes
-  const referralCode = form.watch("referralCode");
-  useEffect(() => {
-    const adminKey = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY;
-    if (adminKey && referralCode === adminKey) {
-      setShowAdminFeatures(true);
-    }
-  }, [referralCode]);
+  // Handle successful referral code entry
+  const handleReferralSuccess = () => {
+    setReferralDialogOpen(false);
+    setAdminDialogOpen(true);
+    toast.success("Admin mode activated!");
+  };
 
-  const onSubmit = (values: ExtendedSettingsFormValues) => {
-    // Check if we should activate admin features
-    const adminKey = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY;
-    if (values.referralCode === adminKey) {
-      setShowAdminFeatures(true);
-    }
-
+  const onSubmit = (values: z.infer<typeof SettingsSchema>) => {
     startTransition(() => {
       settings(values)
         .then((data) => {
@@ -111,9 +89,12 @@ const SettingsPage = () => {
     <div className="flex min-h-[10vw] w-full items-center justify-center p-6 md:p-10">
       <Card className="w-[600px]">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold text-center">
+          <p
+            className="text-2xl font-semibold text-center"
+            onClick={handleTitleClick}
+          >
             ⚙️Settings
-          </CardTitle>
+          </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -220,115 +201,6 @@ const SettingsPage = () => {
                     )}
                   />
                 )}
-
-                {/* Referral Code Field - Easter Egg Trigger */}
-                <FormField
-                  control={form.control}
-                  name="referralCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Referral Code</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Have a Referral Code?"
-                          type="text"
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Hidden Admin Fields - Only shown when easter egg is activated */}
-                {showAdminFeatures && (
-                  <>
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md mb-3">
-                      <p className="text-amber-800 text-sm font-medium">
-                        🔓 Admin features unlocked!
-                      </p>
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="balance"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Balance</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              step="0.01"
-                              placeholder={isLoading ? "Loading..." : ""}
-                              disabled={isPending || isLoading}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Update account balance
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="totalProfit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Total Profit</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              step="0.01"
-                              placeholder={isLoading ? "Loading..." : ""}
-                              disabled={isPending || isLoading}
-                            />
-                          </FormControl>
-                          <FormDescription>Update total profit</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </>
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <Select
-                        disabled={
-                          isPending ||
-                          (!showAdminFeatures && user?.role !== UserRole.ADMIN)
-                        }
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a ROLE" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value={UserRole.ADMIN}>ADMIN</SelectItem>
-                          <SelectItem value={UserRole.USER}>USER</SelectItem>
-                          {showAdminFeatures && (
-                            <SelectItem value={UserRole.SUPER_ADMIN}>
-                              SUPER_ADMIN
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
               <FormError message={error} />
               <FormSuccess message={success} />
@@ -342,6 +214,19 @@ const SettingsPage = () => {
           </Form>
         </CardContent>
       </Card>
+
+      {/* Import the separated dialog components */}
+      <ReferralDialog
+        open={referralDialogOpen}
+        onOpenChange={setReferralDialogOpen}
+        onSuccess={handleReferralSuccess}
+      />
+
+      <AdminDialog
+        open={adminDialogOpen}
+        onOpenChange={setAdminDialogOpen}
+        currentUser={user}
+      />
     </div>
   );
 };

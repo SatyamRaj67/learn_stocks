@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "ts-node prisma/seed.ts",
+    "postinstall": "prisma generate",
     "test": "jest",
     "test:watch": "jest --watch"
   },

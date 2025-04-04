@@ -29,7 +29,6 @@ export function StockDeleteDialog({
   onClose,
   onConfirm,
   isDeleting,
-  hasRelatedData = false,
 }: StockDeleteDialogProps) {
   const [confirmation, setConfirmation] = useState("");
 
