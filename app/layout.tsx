@@ -44,11 +44,13 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <Script
-          crossOrigin="anonymous"
-          src="//unpkg.com/react-scan/dist/auto.global.js"
-          strategy="afterInteractive"
-        />
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            crossOrigin="anonymous"
+            src="//unpkg.com/react-scan/dist/auto.global.js"
+            strategy="afterInteractive"
+          />
+        )}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <SessionProvider session={session}>
@@ -67,7 +69,7 @@ export default async function RootLayout({
                   {children}
                 </SidebarInset>
               </SidebarProvider>
-              <ReactQueryDevtools />
+              {process.env.NODE_ENV === "development" && <ReactQueryDevtools />}
             </QueryClientProvider>
           </ThemeProvider>
         </SessionProvider>
