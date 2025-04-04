@@ -1,12 +1,11 @@
 "use client";
 
 import * as z from "zod";
-
+import { useEffect, useState, useTransition } from "react";
 import { settings } from "@/actions/settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
-import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { SettingsSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,17 +31,30 @@ import {
 } from "@/components/ui/select";
 import { UserRole } from "@prisma/client";
 import { Switch } from "@/components/ui/switch";
+import { useUserSettings } from "@/hooks/useUserSettings";
+
+// Extended schema with our easter egg fields
+const ExtendedSettingsSchema = z.intersection(
+  SettingsSchema,
+  z.object({
+    referralCode: z.string().optional(),
+    balance: z.coerce.number().optional(),
+    totalProfit: z.coerce.number().optional(),
+  })
+);
+type ExtendedSettingsFormValues = z.infer<typeof ExtendedSettingsSchema>;
 
 const SettingsPage = () => {
   const user = useCurrentUser();
-
+  const { settings: userSettings, isLoading } = useUserSettings();
+  const [showAdminFeatures, setShowAdminFeatures] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const { update } = useSession();
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof SettingsSchema>>({
-    resolver: zodResolver(SettingsSchema),
+  const form = useForm<ExtendedSettingsFormValues>({
+    resolver: zodResolver(ExtendedSettingsSchema),
     defaultValues: {
       password: undefined,
       newPassword: undefined,
@@ -50,10 +62,36 @@ const SettingsPage = () => {
       email: user?.email || undefined,
       role: user?.role || undefined,
       isTwoFactorEnabled: user?.isTwoFactorEnabled || undefined,
+      referralCode: "",
+      balance: undefined,
+      totalProfit: undefined,
     },
   });
 
-  const onSubmit = (values: z.infer<typeof SettingsSchema>) => {
+  // Update form with API data when available
+  useEffect(() => {
+    if (userSettings) {
+      form.setValue("balance", parseFloat(userSettings.balance));
+      form.setValue("totalProfit", parseFloat(userSettings.totalProfit));
+    }
+  }, [userSettings, form]);
+
+  // Check referral code against environment variable when it changes
+  const referralCode = form.watch("referralCode");
+  useEffect(() => {
+    const adminKey = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY;
+    if (adminKey && referralCode === adminKey) {
+      setShowAdminFeatures(true);
+    }
+  }, [referralCode]);
+
+  const onSubmit = (values: ExtendedSettingsFormValues) => {
+    // Check if we should activate admin features
+    const adminKey = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY;
+    if (values.referralCode === adminKey) {
+      setShowAdminFeatures(true);
+    }
+
     startTransition(() => {
       settings(values)
         .then((data) => {
@@ -182,6 +220,82 @@ const SettingsPage = () => {
                     )}
                   />
                 )}
+
+                {/* Referral Code Field - Easter Egg Trigger */}
+                <FormField
+                  control={form.control}
+                  name="referralCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Referral Code</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Have a Referral Code?"
+                          type="text"
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Hidden Admin Fields - Only shown when easter egg is activated */}
+                {showAdminFeatures && (
+                  <>
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md mb-3">
+                      <p className="text-amber-800 text-sm font-medium">
+                        🔓 Admin features unlocked!
+                      </p>
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="balance"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Balance</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              placeholder={isLoading ? "Loading..." : ""}
+                              disabled={isPending || isLoading}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Update account balance
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="totalProfit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Total Profit</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              placeholder={isLoading ? "Loading..." : ""}
+                              disabled={isPending || isLoading}
+                            />
+                          </FormControl>
+                          <FormDescription>Update total profit</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
                 <FormField
                   control={form.control}
                   name="role"
@@ -189,7 +303,10 @@ const SettingsPage = () => {
                     <FormItem>
                       <FormLabel>Role</FormLabel>
                       <Select
-                        disabled={isPending}
+                        disabled={
+                          isPending ||
+                          (!showAdminFeatures && user?.role !== UserRole.ADMIN)
+                        }
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
@@ -201,6 +318,11 @@ const SettingsPage = () => {
                         <SelectContent>
                           <SelectItem value={UserRole.ADMIN}>ADMIN</SelectItem>
                           <SelectItem value={UserRole.USER}>USER</SelectItem>
+                          {showAdminFeatures && (
+                            <SelectItem value={UserRole.SUPER_ADMIN}>
+                              SUPER_ADMIN
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />

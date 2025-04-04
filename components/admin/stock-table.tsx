@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import {
   Table,
@@ -13,22 +13,66 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { EditIcon, Loader2, PlusCircle, Search } from "lucide-react";
+import { EditIcon, Loader2, PlusCircle, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatLargeNumber } from "@/lib/utils";
 import { StockEditDialog } from "./stock-edit-dialog";
+import { StockDeleteDialog } from "./stock-delete-dialog";
+import { toast } from "sonner";
 
 export function AdminStockTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [stockToEdit, setStockToEdit] = useState<Stock | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [stockToDelete, setStockToDelete] = useState<Stock | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [hasRelatedData, setHasRelatedData] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const { data: stocks, isLoading } = useQuery({
     queryKey: ["admin-stocks"],
     queryFn: async () => {
       const response = await axios.get("/api/admin/stocks");
       return response.data as Stock[];
+    },
+  });
+
+  const deleteStockMutation = useMutation({
+    mutationFn: async ({
+      stockId,
+      force,
+    }: {
+      stockId: string;
+      force: boolean;
+    }) => {
+      await axios.delete(`/api/stocks/${stockId}${force ? "?force=true" : ""}`);
+    },
+    onSuccess: () => {
+      toast.success("Stock deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-stocks"] });
+      setIsDeleteDialogOpen(false);
+      setStockToDelete(null);
+      setHasRelatedData(false);
+    },
+    onError: (error: any) => {
+      console.error("Error deleting stock:", error);
+
+      // Check if the error is due to related data
+      if (error.response?.data?.hasRelatedData) {
+        setHasRelatedData(true);
+        setIsDeleteDialogOpen(true);
+        toast.error(
+          "This stock has related data. Use force delete to remove it."
+        );
+      } else {
+        toast.error(
+          "Failed to delete stock: " +
+            (error.response?.data?.error || "Unknown error")
+        );
+        setIsDeleteDialogOpen(false);
+      }
     },
   });
 
@@ -46,8 +90,16 @@ export function AdminStockTable() {
     setIsDialogOpen(true);
   };
 
+  const handleDelete = (stock: Stock) => {
+    setStockToDelete(stock);
+    deleteStockMutation.mutate({ stockId: stock.id, force: false });
+  };
+
+  const confirmDelete = (stock: Stock, forceDelete: boolean) => {
+    deleteStockMutation.mutate({ stockId: stock.id, force: forceDelete });
+  };
+
   const handleCreateNew = () => {
-    // Create an empty stock object for the form
     setStockToEdit({
       id: "",
       symbol: "",
@@ -103,7 +155,7 @@ export function AdminStockTable() {
               <TableHead>Market Cap</TableHead>
               <TableHead>Sector</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-center w-[2em]">Actions</TableHead>
+              <TableHead className="text-center w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -158,16 +210,33 @@ export function AdminStockTable() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(stock)}
-                      className="right-0 items-center"
-                    >
-                      <EditIcon size={14} />
-                      Edit
-                    </Button>
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(stock)}
+                        className="items-center"
+                      >
+                        <EditIcon
+                          size={14}
+                          className="mr-1"
+                        />
+                        Edit
+                      </Button>
+                      <Button
+                        className="items-center"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(stock)}
+                      >
+                        <Trash2
+                          size={14}
+                          className="mr-1"
+                        />
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -191,6 +260,21 @@ export function AdminStockTable() {
         open={isDialogOpen}
         onClose={handleCloseDialog}
       />
+
+      {/* Dialog for deleting stocks */}
+      {hasRelatedData && (
+        <StockDeleteDialog
+          stock={stockToDelete}
+          open={isDeleteDialogOpen}
+          onClose={() => {
+            setIsDeleteDialogOpen(false);
+            setHasRelatedData(false);
+          }}
+          onConfirm={confirmDelete}
+          isDeleting={deleteStockMutation.isPending}
+          hasRelatedData={true}
+        />
+      )}
     </div>
   );
 }

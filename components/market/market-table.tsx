@@ -182,10 +182,8 @@ export function MarketTable() {
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
-                          min="0"
                           placeholder="Qty"
                           className="w-16 h-8"
-                          value={quantities[stock.id] || ""}
                           onChange={(e) =>
                             handleQuantityChange(stock.id, e.target.value)
                           }
