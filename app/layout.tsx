@@ -11,6 +11,7 @@ import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { SiteHeader } from "@/components/layout/site-header";
 import { QueryClientProvider } from "@/providers/queryClient-provider";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -62,10 +63,11 @@ export default async function RootLayout({
                 <AppSidebar variant="inset" />
                 <SidebarInset>
                   <SiteHeader />
-                  {children}
                   <Toaster />
+                  {children}
                 </SidebarInset>
               </SidebarProvider>
+              <ReactQueryDevtools />
             </QueryClientProvider>
           </ThemeProvider>
         </SessionProvider>
